@@ -1,3 +1,6 @@
+TERRAMASTER F4-424 Pro NAS 4-Bay, Core i3-N305 8-Core, 32GB DDR5 (Diskless)
+RTL-SDR Blog V3 R860 RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined Radio with Dipole Antenna Kit
+Western Digital 8TB WD Red Plus NAS Internal Hard Drive HDD - 5640 RPM, SATA 6 Gb/s, CMR, 256 MB Cache, 3.5" - WD80EFPX (2x)
 TBF Item ID: 98978.
 This item has been Tested for Key Functions, Ready for Resale.
 
