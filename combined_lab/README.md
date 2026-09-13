@@ -27,6 +27,8 @@ See `current_hardware.md` for the hardware this plan is built around.
    network.
 4. **Use the NAS.** It's small, quiet, office-appropriate, and already
    in hand.
+5. **Over-the-air TV.** One antenna serving both the living-room smart TV
+   and Wi-Fi devices, with no new cable pulled through the house.
 
 ## Two-node split
 
@@ -235,6 +237,321 @@ This satisfies `satcom/00-hardware-and-tools`' Tier 0/1 checkpoint with
 the source relocated to a network block, and it decouples "where the
 antenna cable runs" from "where the DSP work happens."
 
+## Goal 5 — Over-the-air television
+
+A household requirement rather than a curriculum one, but it shares the
+RF domain with `satcom/` and rides the network this plan already builds,
+so it belongs here. Target: live Honolulu broadcast TV on the
+living-room Samsung TV *and* on the laptop, from one antenna, without
+pulling new cable through the house.
+
+**The antenna is not the thing that gets shared.** An antenna is passive
+and terminates in one coax connector; what makes OTA reachable from
+arbitrary devices is a **network tuner** — an ATSC demodulator with an
+Ethernet port that republishes each channel as an HTTP stream. Splitting
+coax to the living room would also work, and would actually look better
+on the TV, but it needs a cable run — which this plan already rejected
+once for Cat6 (see **Parked hardware**). So the coax stays short and
+inside the office, and distribution moves onto the LAN, where the Wi-Fi
+and Tailscale already reach everything.
+
+```
+Antenna (office window or attic, fixed aim ~WNW toward Palehua)
+   │ RG-6 quad-shield, short run
+HDHomeRun Flex Duo ── office switch ── home LAN
+                                        ├─ Samsung TV (HDHomeRun Tizen app)
+                                        ├─ Laptop (HDHomeRun app, or VLC on
+                                        │    http://<tuner-ip>:5004/auto/v5.1)
+                                        ├─ Hub (optional DVR → tank/ota-recordings/)
+                                        └─ Tailscale ─► same streams while traveling
+```
+
+### Signal environment — measured, not assumed
+
+Site survey run 2026-09-13 via RabbitEars for the actual location
+(West Oahu, ~21.34°N / -158.01°W, 13' AGL). This **replaces** the
+earlier estimates in this plan, two of which were wrong in ways that
+changed the antenna decision.
+
+| Item | Value |
+|---|---|
+| Distance to transmitters | **6.6–11.9 mi** — much closer than the 15–25 mi first assumed |
+| Bearings | **Two clusters ~152° apart**, not one. See below |
+| Aiming | **Do not aim.** No single direction reaches both clusters |
+| Margins | **+46 to +65 dB** over threshold for every major. Signal is overwhelming |
+| Bands needed | UHF **and VHF-Hi** — KHON is on RF 8, KHET on RF 11 |
+| ATSC 3.0 | KHII-TV (RF 22) is the lighthouse. Every major also runs its own ATSC 1.0 transmitter, all strong |
+
+**Cluster A — Palehua / Makakilo, ~307–311° true (~298–302° magnetic), 6.6–7.1 mi**
+
+| Station | Net | RF | Margin |
+|---|---|---|---|
+| KGMB | CBS | 23 | +61.6 dB |
+| KHII-TV | MyN | 22 | +60.7 |
+| KHNL | NBC | 35 | +59.3 |
+| KHET | PBS | **11** (VHF-Hi) | +60.8 |
+| KIKU | IND | 19 | +60.9 |
+| KALO | REL | 18 | +64.9 |
+| KUPU | IND | 15 | +62.1 |
+| KKAI | IND | 29 | +57.2 |
+| KPXO-TV | ION | 32 | +56.4 |
+| KWBN | Daystar | 26 | +23.5 |
+| KAAH-TV | TBN | 27 | +21.1 |
+
+**Cluster B — Honolulu side (Tantalus area), ~94–106° true (~85–96° magnetic), 8.3–11.9 mi**
+
+| Station | Net | RF | Margin |
+|---|---|---|---|
+| KBFD-DT | Korean | 33 | +58.5 dB |
+| KITV | **ABC** | 20 | +55.8 |
+| KWHE | IND | 31 | +52.1 |
+| KHON-TV | **FOX/CW** | **8** (VHF-Hi) | +46.6 |
+| KHHI-LD | — | 36 | +15.8 |
+
+The survey also lists KKAI, KPXO and KUPU from distant Kailua / Kaneohe /
+Waimanalo translators at −21 to −33 dB. Ignore those; the same stations
+arrive from Cluster A with 56–62 dB to spare.
+
+#### What this changes
+
+1. **ABC and FOX are in the opposite direction from everything else.**
+   KITV and KHON sit ~152° away from the Palehua cluster. **A directional
+   antenna cannot have both** — aiming at Palehua sacrifices ABC and FOX,
+   aiming at Honolulu sacrifices CBS, NBC and PBS. So the earlier
+   "fixed aim WNW, no rotator" line was wrong, and so was calling
+   omnidirectional a compromise: here it is **the correct choice**, and
+   the FLATenna stops being a probe and becomes the answer.
+2. **Weak signal is not a risk; overload is.** Field strengths run to
+   104 dBμV/m at 7 miles, +46–65 dB over threshold. The plan's earlier
+   "no preamp" rule hardens into an absolute, and an **attenuator**
+   becomes a plausible need instead of a remote one.
+3. **VHF-Hi is confirmed, not hypothetical.** KHON on RF 8 and KHET on
+   RF 11 mean a UHF-only antenna loses FOX/CW and PBS. The FLATenna
+   covers VHF-Hi, which is the specific reason to keep it over a
+   UHF-only panel.
+
+#### The one station to verify
+
+**KHON-TV (FOX/CW, RF 8.)** It is the only signal with three strikes at
+once: VHF-Hi, where a 12×15" panel is electrically small; in Cluster B,
+so it arrives off the panel's back or edge; and the lowest margin of any
+major at +46.6 dB, rated only "Fair." Everything else has enough margin
+to be indifferent to orientation. If one channel misbehaves, it will be
+this one — check it first, and use it as the station to orient against.
+
+Salt air still argues for indoor mounting — the same reasoning that
+parked the R720XD — and at 7 miles nothing about this signal environment
+justifies going outside.
+
+> **Hardware ordered 2026-09-13, arriving Thursday.** Step-by-step
+> bring-up, the attenuator decision procedure, and the results log are in
+> **`ota_bringup.md`**; **`ota-survey.sh`** sweeps these RF channels and
+> reports the tuner's own signal metrics.
+
+### Prediction tools
+
+Use **[RabbitEars Signal Search Map](https://rabbitears.info/searchmap.php)**
+(address or coordinates + antenna height → per-station field strength, real
+RF channel, distance, bearing, terrain-modeled; has a privacy shift for the
+displayed pin). Cross-check against the
+[FCC DTV map](https://www.fcc.gov/media/engineering/dtvmaps) and
+[AntennaWeb](https://antennaweb.org), the latter for *magnetic* bearing —
+local declination is ~9–10°E, which the survey above reflects. **Not
+TVFool:** its database predates the FCC repack that moved nearly half of
+all US RF channels, which is exactly the field that matters here.
+
+### Interference — what actually matters here
+
+Interference *between* stations is a non-issue: island isolation means no
+co-channel conflict with other markets, and the two clusters are on
+separate RF channels throughout. The real risks, reordered against the
+measured data:
+
+| Risk | Symptom | Fix |
+|---|---|---|
+| **Front-end overload** — now the top risk at +46–65 dB margins | Strength pins >100%; channels scan but won't lock; strong channels worse than weak ones | **6–10 dB attenuator.** Never an amplifier |
+| **Multipath** | Fine by day, drops at night; high strength, low symbol quality | Reposition the panel. A directional fix is unavailable here — see Cluster B |
+| **600 MHz LTE/5G** (T-Mobile band 71) | Trouble on RF 36 specifically | **LTE filter (~$15).** TV ends at RF 36 / 608 MHz; above is cellular. Only KHHI-LD is exposed, and it's already Poor |
+| **FM broadcast** (88–108 MHz) | Broad desense, worst on VHF-Hi — i.e. on KHON and KHET | FM trap |
+
+**No prediction site models multipath.** They compute path loss over
+terrain and stop. With margins this large, multipath is now the *only*
+plausible propagation failure, and the only instruments that reveal it are
+the Flex Duo's symbol-quality readout and the RTL-SDR. For interference
+specifically the SDR beats every site above: sweep 470–700 MHz at the
+candidate window and read the real environment, including whether an LTE
+carrier sits just above 608 MHz. Measurement instead of prediction, and
+it's the same survey as lab 3 below.
+
+### Antenna
+
+The survey settles this: **Channel Master FLATenna 35 (`CM-4001HDBW`,
+~$25)**, passive, UHF + VHF-Hi, 12 ft RG6 in the box. Not a probe — the
+right part, for three reasons the measured data supplies:
+
+- **Omnidirectional is required, not tolerated.** The two clusters are
+  ~152° apart, so no single directional antenna covers both.
+- **A rotator is worse than useless here.** This is a *network* tuner
+  serving the TV and the laptop at once; the moment one client watches
+  CBS (Cluster A) while another watches ABC (Cluster B), a steerable
+  antenna cannot satisfy both. Omnidirectional isn't a concession to
+  cost — it's structurally required by the design.
+- **It covers VHF-Hi**, which KHON (RF 8) and KHET (RF 11) need.
+
+Placement, given that 12 of 13 stations have +46 dB or better and are
+therefore indifferent to orientation:
+
+- A flat panel's lobes are broadside to the sheet, front and back. Set
+  the face normal to roughly **295° / 115°** and both clusters fall in a
+  lobe rather than off an edge.
+- Keep metal off the back — foil-backed insulation, metal blinds,
+  appliances, a monitor.
+- Glass over drywall where there's a choice.
+- Verify **KHON (RF 8)** first and orient against it; it's the only
+  station with no margin to spare.
+
+**Add an attenuator before you add anything else.** At +46–65 dB, if
+channels scan but won't lock, the problem is overload, and 6–10 dB of
+attenuation is the fix. Never an amplifier; specifically never the
+amplified FLATenna variant (`CM-4001HDBWA`).
+
+If the FLATenna genuinely falls short, the escalation is *not* a
+directional antenna — the two-cluster geometry has ruled that out. In
+order:
+
+1. **Try other windows.** Free, and with margins this large, position
+   beats hardware.
+2. **If only KHON/KHET misbehave**, the problem is band, not direction:
+   add a small dedicated VHF-Hi antenna and combine it with the panel
+   through a **UVSJ** (UHF/VHF splitter-joiner). This is the most likely
+   escalation.
+3. **If one whole cluster is weak**, two panels into a combiner, one
+   facing each cluster. Last resort — combiners add loss and can produce
+   cancellation on channels both antennas hear.
+
+This is a **second, separate antenna** from the RTL-SDR's kit dipole.
+The dipole is deliberately broadband for satcom work; this one covers
+174–216 MHz (VHF-Hi) and 470–608 MHz (UHF) and nothing else. Don't try to
+make one serve both full-time — though see the labs below for a
+deliberate temporary swap.
+
+### Tuner
+
+| Model | Tuners | Rough cost | Verdict |
+|---|---|---|---|
+| **Flex Duo** | 2 × ATSC 1.0 | ~$130 | **Buy this.** Covers TV + laptop concurrently |
+| Flex Quatro | 4 × ATSC 1.0 | ~$180 | Only if 3+ concurrent streams, or recording while watching, matters |
+| Flex 4K | 4 total, 2 do ATSC 3.0 | ~$200 | Skip |
+
+Why skip the 4K despite Honolulu having real ATSC 3.0: **as of early
+2026 no HDHomeRun can decrypt DRM-protected ATSC 3.0**, and on meeting
+an encrypted 3.0 channel it silently falls back to that station's ATSC
+1.0 version — so the premium buys a tuner that mostly hands back the
+picture the cheaper box already gets. (The ZapperBox M1 *does* handle
+DRM'd 3.0, but it's an HDMI set-top box, not a network tuner — wrong
+shape for a "reachable from everything" requirement.) The one genuinely
+interesting thing about ATSC 3.0 here is its *physical layer*, and the
+RTL-SDR already shows that for free — see below.
+
+The tuner has a single coax input and feeds all its tuners internally,
+so no splitter is needed between antenna and tuner.
+
+### Clients
+
+| Device | Method |
+|---|---|
+| Samsung TV (living room) | Native **HDHomeRun app on Tizen** — auto-discovers the tuner on the LAN. No server, no transcoding, no subscription for live TV |
+| Laptop | HDHomeRun app, or any player pointed at `http://<tuner-ip>:5004/auto/v<virtual-channel>`; VLC and mpv both handle the raw MPEG-2 TS |
+| Phone | HDHomeRun app, on the LAN or over Tailscale |
+
+The Samsung's own built-in tuner is still the best possible path *for
+that one device* — it's a NextGen TV set, so it handles the DRM'd ATSC
+3.0 the HDHomeRun can't. That's an argument for running coax to the
+living room someday, not an argument against this design; the network
+path is what makes every other device work.
+
+### Watching from the road
+
+Same bandwidth wall as Goal 3, for the same reason. ATSC 1.0 is a
+**19.39 Mbit/s** multiplex per 6 MHz RF channel, and one HD subchannel
+is typically 12–17 Mbit/s of MPEG-2 — so relaying a channel untouched
+over Tailscale needs that much *upload* from home, which most
+residential links won't provide. The fix mirrors the SDR case: don't
+ship the raw stream.
+
+- **On the LAN or Wi-Fi:** stream it raw. 17 Mbit/s is nothing here.
+- **Over Tailscale:** put a transcoding DVR in front of it and pull a
+  re-encoded 4–6 Mbit/s H.264 stream instead.
+
+### Optional — DVR onto the Hub
+
+The Hub is always on with an 8TB mirror, which is exactly what a DVR
+wants. Not required for the stated goal — the live-TV apps work with no
+server at all. When you do want it:
+
+| Option | Cost | Fit |
+|---|---|---|
+| HDHomeRun DVR | ~$35/yr | Lowest friction — same app, records to an SMB share on the Hub |
+| Channels DVR | paid | Best transcoding and remote-streaming story, which is what the travel case actually needs |
+| Tvheadend / Jellyfin container | free | Fits the lab's self-hosted instinct, but neither has a first-party Tizen app, so the TV would need a Fire TV stick or Chromecast as its client |
+
+If you add one, create a `tank/ota-recordings/` dataset alongside the
+existing three, and keep it out of the `vzdump` scope — recordings are
+replaceable and shouldn't inflate the backup set.
+
+### Where this touches `satcom/`
+
+Worth doing even though the TV works without it: these transmitters give
+you a **strong, permanent, known-location signal 7 miles away** — a far
+better teaching target than a marginal satellite pass, and the survey
+above means every frequency below is already known rather than guessed.
+
+The RTL-SDR **cannot demodulate ATSC.** A 6 MHz channel needs 6+ MSPS and
+the Blog V3 tops out near 2.4 MSPS. But it does the part that matters
+pedagogically. Channel-to-frequency, so any of these can be recomputed:
+
+```
+VHF-Hi (ch 7–13):  lower edge = 174 + 6 × (n − 7)   MHz
+UHF    (ch 14–36): lower edge = 470 + 6 × (n − 14)  MHz
+8VSB pilot = lower edge + 0.31 MHz
+```
+
+1. **Orient the panel with the SDR, not the TV's meter.** ATSC 1.0's 8VSB
+   carries a pilot carrier 310 kHz above the lower channel edge —
+   narrowband, strong, trivially visible inside a 2.4 MSPS window. The
+   station to peak on is **KHON, RF 8 → pilot at 180.31 MHz**, because
+   it's the one with no margin to spare. Watch the spike amplitude while
+   repositioning. That's a real signal-strength meter, and it explains
+   *why* a residual-sideband scheme carries a pilot at all (carrier
+   recovery). Needs an F-to-SMA adapter to borrow the TV antenna for a
+   few minutes. Ties to `satcom/02-rf-electronics-fundamentals`.
+2. **8VSB against OFDM, on adjacent channels.** The market hands you an
+   ideal pair: **KHII RF 22 (518–524 MHz)** is the ATSC 3.0 lighthouse
+   and **KGMB RF 23 (524–530 MHz)** is ATSC 1.0 — 6 MHz apart, same site,
+   same bearing, same distance, so nothing but the modulation differs.
+   One shows a sharp pilot at 524.31 MHz; the other is a flat noise-like
+   block with no discrete carrier. Let the pilot's presence *identify*
+   which standard you're looking at rather than trusting the label. Two
+   eras of modulation design in one screenshot — and ATSC 3.0's
+   OFDM + LDPC is far closer to DVB-S2 than 8VSB is, which is the
+   waveform family `satcom/07-satellite-modems-waveforms` is about. Ties
+   to `05-digital-comms-info-theory` and `07`.
+3. **Survey the whole band and check the LTE edge.** Sweep 470–608 MHz
+   and confirm energy on the 14 RF channels the survey predicts (15, 18,
+   19, 20, 22, 23, 26, 27, 29, 31, 32, 33, 35, 36), then keep going to
+   700 MHz. TV ends at 608; anything strong above it is T-Mobile band 71,
+   and **RF 36 (602–608 MHz, KHHI-LD)** is the one channel adjacent to it.
+   This is measurement where the prediction sites can only model. Good
+   first exercise for `satcom/08-sdr-gnuradio-labs`.
+
+A fourth, free one: the two clusters are 152° apart, so sweeping the same
+UHF channel while rotating the panel traces a real **antenna radiation
+pattern** — the flat panel's broadside lobes and edge nulls, measured
+rather than read off a datasheet. Ties back to `02`.
+
+Nothing here transmits, so all of it stays inside the receive-only
+boundary that applies before `satcom/03-ham-radio-license`.
+
 ## Gaps to fill
 
 - **The mini PC itself.** Ryzen 7 7730U class, and critically **the
@@ -251,8 +568,14 @@ antenna cable runs" from "where the DSP work happens."
 - **Don't pay a premium for a Windows license.** It gets wiped for
   Proxmox, it's OEM-tied to that board, and the DFIR VM uses the
   Windows Server 2022 eval ISO regardless.
-- **Antenna placement.** A short USB extension and the kit dipole,
+- **SDR antenna placement.** A short USB extension and the kit dipole,
   window-mounted, per `satcom/00-hardware-and-tools` Tier 1.
+- **TV antenna + network tuner** for Goal 5 — Channel Master FLATenna 35
+  plus an HDHomeRun Flex Duo, both settled by the site survey. Add a
+  **6–10 dB attenuator** to the same order; at +46–65 dB margins overload
+  is the likeliest failure, and it's a $8 part.
+- **F-to-SMA adapter** (~$5) so the RTL-SDR can borrow the TV antenna for
+  the aiming and waveform-comparison labs in Goal 5.
 
 No longer needed (these were requirements of the single-node revision):
 
@@ -302,6 +625,12 @@ tailnet. The two-node split exists to avoid all of that.
 9. Rehearse the evidence-out path: `dump-guest-memory` from the Windows
    VM, then open it with Volatility3 on the analysis VM — without ever
    giving the Windows VM a network route.
+10. **(Independent of 1–9.)** OTA bring-up — antenna, tuner, orientation,
+    the attenuator decision, and both clients. Full procedure and results
+    log in **`ota_bringup.md`**; the measurement tool is
+    **`ota-survey.sh`**. Short version: network before RF, measure before
+    attenuating, and orient against KHON (RF 8) because it is the only
+    station without margin to spare.
 
 ## Checkpoint
 

@@ -38,6 +38,99 @@ VM datastore living on the M.2 slots.
 RTL-SDR Blog V3 R860 RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined
 Radio with Dipole Antenna Kit
 
+## OTA television (ordered 2026-09-13, arriving Thursday)
+
+For `README.md` **Goal 5**. Separate from the SDR above — different
+antenna, different demodulator, different band priorities.
+
+Parts settled by the RabbitEars site survey of 2026-09-13 (West Oahu,
+13' AGL), which superseded the initial estimates. Two findings drove the
+choice: transmitters are at **6.6–11.9 mi**, not 15–25, with **+46 to
++65 dB** margins on every major; and they sit in **two clusters ~152°
+apart** (Palehua ~308° true, Honolulu side ~100° true) rather than one
+bearing. Full tables under Goal 5.
+
+| Item | Spec / model | Paid | Status |
+|---|---|---|---|
+| Network tuner | SiliconDust HDHomeRun **Flex Duo**, `HDFX-2US` (2 × ATSC 1.0, Ethernet, single coax in) | $109.99 | **Ordered** |
+| Antenna | Channel Master **FLATenna**, non-amplified — flat indoor, passive, omnidirectional, UHF + VHF-Hi, gain 3 dB VHF / 6 dB UHF, 12 ft RG6 included | $35.00 | **Ordered** |
+| Attenuator | Holland Electronics **`FAM-10`** — 10 dB fixed, inline F, 75 Ω, passband covers VHF-Hi and UHF | $6.41 | **Ordered** — install only on symptom, per `ota_bringup.md` Phase 3 |
+| F-to-SMA adapter | F **female** → SMA **male**, to put the TV antenna on the Blog V3's SMA jack | ~$5 | **NOT ordered** — blocks only Phase 5 labs 1 and 4; labs 2–3 run on the kit dipole |
+| 20 dB attenuator pad | The SDR overloads where the tuner does not; 10 dB may not be enough | ~$6 | **Consider** — add to the adapter order |
+
+Total spent: **$151.40.**
+
+No separate coax purchase — the FLATenna ships with 12 ft of RG6, enough
+if the chosen window is within that of the office switch.
+
+**Do not buy the amplified variant** (`CM-4001HDBWA`). At 7 miles with
++46–65 dB of margin the signal is already far past adequate; a preamp
+only pushes the tuner front end toward overload.
+
+### Why the FLATenna, specifically
+
+Its omnidirectional pattern was initially recorded here as a compromise.
+The survey reversed that — it is the **correct** choice:
+
+- **No directional antenna can cover both clusters.** ABC (KITV, RF 20)
+  and FOX/CW (KHON, RF 8) are ~152° away from CBS/NBC/PBS. Aiming at
+  either cluster sacrifices the other.
+- **A rotator is ruled out by the design, not just by cost.** The Flex
+  Duo serves the TV and the laptop simultaneously; one client on CBS
+  (Cluster A) and another on ABC (Cluster B) cannot share a steered
+  antenna. Omnidirectional is structurally required.
+- **VHF-Hi is confirmed in use.** KHON on RF 8 and KHET on RF 11 mean a
+  UHF-only panel loses FOX/CW and PBS.
+- Channel Master publishes real gain figures and is an actual antenna
+  manufacturer, unlike the generic listings below.
+
+Remaining weakness, worth knowing before it surprises anyone: the panel
+is 12×15", so it is electrically small at VHF-Hi (a half-wave element
+there wants 28–33"). **KHON, RF 8** is therefore the one station at risk
+— VHF-Hi, in the far cluster, and the lowest margin of any major at
++46.6 dB, rated only "Fair." If exactly one channel misbehaves, it is
+this one, and the fix is a small dedicated VHF-Hi antenna combined
+through a UVSJ — not a directional, and not an amplifier.
+
+### Considered and rejected — amplified flat panels
+
+E.g. Vansky `VS-TX01` and the many near-identical "50 mile range"
+listings. Rejected on two counts, recorded here so the question doesn't
+get re-litigated:
+
+- **Not directional, despite how they're marketed.** A flat panel has
+  negligible front-to-back rejection. (As it turns out this is moot —
+  the two-cluster geometry means directivity would be a *liability* here
+  — but the marketing claim is still false.)
+- **The amplifier is a liability at this distance.** Vansky's own
+  documentation says to detach it inside 20 miles, and the survey puts
+  the transmitters at 7. More generally: a preamp raises signal and noise
+  together, so it can only recover loss occurring *after* the antenna (a
+  long coax run). It cannot recover SNR the antenna never captured, and
+  it does nothing for multipath. Same noise-figure reasoning as
+  `satcom/02-rf-electronics-fundamentals` and the link budgets in `06`.
+
+They also publish no gain figure or radiation pattern, where Channel
+Master publishes both. At equal price, prefer the one with a spec sheet.
+
+**Rule going forward:** with +46–65 dB of margin already in hand, no
+antenna purchase should ever be aimed at *more signal*. If something
+fails, the cause will be overload, multipath, or VHF-Hi aperture — and
+the answers are an attenuator, repositioning, or a UVSJ-combined VHF
+antenna respectively. Never an amplifier.
+
+### Acceptance thresholds (Flex Duo web UI, per channel)
+
+| Metric | Target | Meaning |
+|---|---|---|
+| **Symbol Quality** | **100%** | Anything less is uncorrected errors. This is the deciding number. |
+| Signal Quality (SNR) | 100%; ≥80% tolerable | Below ~80% brings 8VSB cliff-effect dropouts |
+| Signal Strength | 75–100% | Well above 100% means front-end overload — insert the attenuator |
+
+Check **KHON (RF 8)** first; every other major has enough margin to be
+indifferent to orientation. A pattern of *strong* channels failing while
+weak ones pass is the overload signature, not a weak-signal one.
+
 ## Forge — Dell R720XD (owned, parked — see README "Parked hardware")
 
 TBF Item ID: 98978.
