@@ -38,8 +38,9 @@ on Thursday. See Phase 5.
 
 ## Phase 0 — before the boxes arrive
 
-Pick the window and work out the orientation on paper, so Thursday is
-assembly rather than deliberation.
+Two parts: work out the orientation on paper, then **verify it by
+measurement** — the RTL-SDR and its kit dipole are already in hand, so
+this does not have to wait for Thursday.
 
 **Deriving the panel orientation.** A flat panel's lobes are broadside to
 the sheet, **front and back**, which is what makes it usable here at all.
@@ -60,6 +61,41 @@ Shortlist windows that can face that way, and prefer ones with:
 - nothing metallic behind the panel — foil-backed insulation, metal
   blinds, a monitor, a fridge
 - ≤12 ft of cable run to the switch (that is all the coax you have)
+
+### Survey the candidate windows *now*, with the SDR
+
+The kit dipole plus the RTL-SDR is a perfectly good field-strength meter
+for this band, and using it before the FLATenna arrives means Thursday
+starts from a known-good window instead of a guess. Mount nothing; just
+hold the dipole at each candidate window and compare.
+
+Dipole setup for TV — three details that matter:
+
+- **Horizontal, not vertical.** ATSC is horizontally polarized. A vertical
+  dipole costs you 10–20 dB for no reason, and vertical is the default
+  intuition.
+- **Elements broadside to the signal**, i.e. the whips run perpendicular to
+  the direction the station is in — a dipole's nulls are off its ends.
+- **Element length** — each leg is a quarter wave:
+
+  | Target | λ/4 per leg | Use |
+  |---|---|---|
+  | RF 8 / 11 (VHF-Hi, 183 / 201 MHz) | 41 / 37 cm | **long** whips (23–100 cm) |
+  | RF 15–23 (476–530 MHz) | ~14 cm | short whips fully out, or long whips retracted |
+  | RF 29–36 (560–608 MHz) | ~12–13 cm | **short** whips (5–13 cm) |
+
+Use the kit's 3 m RG174 extension so the dongle can sit at the desk while
+the dipole is at the glass; ~1.5 dB of loss at these frequencies, which is
+nothing against +46 dB of margin.
+
+What to record per window: relative amplitude of **KHON's 8VSB pilot at
+180.31 MHz** (the station with least margin, and the VHF-Hi one) and of
+**KGMB's at 524.31 MHz** (a UHF representative from the other cluster).
+The window that does best on *both* is the one to mount on — that tradeoff
+is the whole reason the panel has to straddle two directions.
+
+> This measures the *location*, not the FLATenna, so it needs no F-to-SMA
+> adapter. It is also a genuine dry run for Phase 5's labs.
 
 ## Phase 1 — tuner on the network, before any RF
 
@@ -220,6 +256,7 @@ instead of a guess.
 
 Paste survey output and notes here as Phases 2–4 happen.
 
+- [ ] Phase 0 — candidate windows surveyed with SDR + kit dipole, winner chosen
 - [ ] Phase 1 — `discover.json` reachable, DHCP reservation set
 - [ ] Phase 2 — baseline survey captured, orientation settled
 - [ ] Phase 3 — attenuator decision made and justified by the diff

@@ -429,11 +429,25 @@ order:
    facing each cluster. Last resort — combiners add loss and can produce
    cancellation on channels both antennas hear.
 
-This is a **second, separate antenna** from the RTL-SDR's kit dipole.
-The dipole is deliberately broadband for satcom work; this one covers
-174–216 MHz (VHF-Hi) and 470–608 MHz (UHF) and nothing else. Don't try to
-make one serve both full-time — though see the labs below for a
-deliberate temporary swap.
+This is a **second, separate antenna** from the RTL-SDR's kit dipole, and
+the two are not interchangeable in either direction:
+
+- **Frequency.** The FLATenna covers 174–216 and 470–608 MHz. No satcom
+  band of interest falls in either window — 137 MHz (NOAA/Meteor), 145 MHz
+  (2 m sats), 240–320 MHz (UHF milsatcom), 435 MHz (70 cm sats) and
+  1.5–1.7 GHz (Inmarsat/Iridium/GOES/GPS) all miss it.
+- **Polarization.** Satellites are circular to survive Faraday rotation
+  and arbitrary spacecraft attitude; the FLATenna is linear-horizontal to
+  match terrestrial TV. Linear-on-circular is a standing 3 dB loss.
+- **Pattern.** The panel's lobes look at the horizon and its nulls are off
+  its edges — which, wall-mounted, is where the sky is.
+
+The dipole does, however, earn a **dual role**: it is the field-strength
+meter used to pick the FLATenna's window in `ota_bringup.md` Phase 0, and
+set to a 120° V-dipole with ~54 cm legs it is the standard cheap 137 MHz
+NOAA/Meteor antenna for `satcom/`. One instrument, two curricula — which
+is the combination that actually pays off here, rather than trying to make
+one *antenna* serve both.
 
 ### Tuner
 
