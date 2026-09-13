@@ -14,10 +14,11 @@ just the procedure, and the place to paste results as they come in.
 | Attenuator | Holland Electronics `FAM-10`, 10 dB fixed, inline F, 75 Ω | $6.41 |
 | | | **$151.40** |
 
-**Not ordered: the F-to-SMA adapter (~$5).** Nothing for television needs
-it, and only two of the four **Phase 5** SDR labs do — the two that must
-measure the FLATenna itself. The other two run on the RTL-SDR's kit dipole
-on Thursday. See Phase 5.
+Also ordered: an **exgoofit F↔SMA adapter set** (`B07D28P28J`, ~$8, 6 pcs)
+containing the F-female → SMA-male part needed to put the TV antenna on the
+RTL-SDR. Nothing for television depends on it, and it arrives separately —
+**Phase 5** labs 2 and 3 run on the kit dipole regardless, and labs 1 and 4
+unblock when it lands. See Phase 5.
 
 ## Prerequisites
 
@@ -208,24 +209,29 @@ is unavailable here, per Goal 5.
 **Pass criterion:** two streams from opposite clusters, concurrently,
 with no dropouts over several minutes.
 
-## Phase 5 — SDR labs *(two of four runnable Thursday)*
+## Phase 5 — SDR labs *(2 and 3 Thursday; 1 and 4 when the adapter lands)*
 
 Only the labs that must look **through the FLATenna** need the F-to-SMA
-adapter. The RTL-SDR's kit dipole telescopes across both bands of
+adapter (ordered; arrives separately from the Thursday shipment). The
+RTL-SDR's kit dipole telescopes across both bands of
 interest — a quarter wave is ~42 cm at 180 MHz and ~13 cm at 550 MHz,
 both inside the supplied elements' range — and at 7 miles it will hear
 these transmitters easily. So:
 
 | Lab (see `README.md` Goal 5) | Needs adapter? |
 |---|---|
-| 1. Peak the FLATenna on KHON's 8VSB pilot, 180.31 MHz | **Yes** — the point is to measure the panel |
+| 1. Peak the FLATenna on KHON's 8VSB pilot, 180.31 MHz | **Yes** — the point is to measure the panel. Adapter ordered |
 | 2. KHII RF 22 (OFDM) vs KGMB RF 23 (8VSB) in the waterfall | **No** — kit dipole is fine |
 | 3. Sweep 470–700 MHz, find the LTE edge above 608 | **No** — kit dipole, and arguably better: it characterises the *environment*, not the panel |
-| 4. Trace the panel's radiation pattern by rotating it | **Yes** |
+| 4. Trace the panel's radiation pattern by rotating it | **Yes** — adapter ordered |
 
 Two cautions before connecting the SDR to anything, both consequences of
 being 7 miles from the transmitters rather than 20:
 
+- **Don't hang the adapter directly off the dongle.** A rigid F↔SMA
+  adapter plus 12 ft of RG6 levers on the SMA jack, which is a known
+  failure point on these dongles. Put the kit's 3 m SMA extension between
+  dongle and adapter so the load lands on cable, not on the board.
 - **Disable the Blog V3's bias tee.** It would push ~4.5 V into a passive
   antenna that presents a DC short. Off is the default; just don't enable
   it.
@@ -262,4 +268,4 @@ Paste survey output and notes here as Phases 2–4 happen.
 - [ ] Phase 3 — attenuator decision made and justified by the diff
 - [ ] Phase 4 — concurrent two-cluster playback confirmed
 - [ ] Phase 5 — labs 2 and 3 (kit dipole)
-- [ ] Phase 5 — labs 1 and 4 (blocked on F-to-SMA adapter)
+- [ ] Phase 5 — labs 1 and 4 (adapter ordered; do on arrival)

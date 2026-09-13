@@ -55,10 +55,17 @@ bearing. Full tables under Goal 5.
 | Network tuner | SiliconDust HDHomeRun **Flex Duo**, `HDFX-2US` (2 × ATSC 1.0, Ethernet, single coax in) | $109.99 | **Ordered** |
 | Antenna | Channel Master **FLATenna**, non-amplified — flat indoor, passive, omnidirectional, UHF + VHF-Hi, gain 3 dB VHF / 6 dB UHF, 12 ft RG6 included | $35.00 | **Ordered** |
 | Attenuator | Holland Electronics **`FAM-10`** — 10 dB fixed, inline F, 75 Ω, passband covers VHF-Hi and UHF | $6.41 | **Ordered** — install only on symptom, per `ota_bringup.md` Phase 3 |
-| F-to-SMA adapter | F **female** → SMA **male**, to put the TV antenna on the Blog V3's SMA jack | ~$5 | **NOT ordered** — blocks only Phase 5 labs 1 and 4; labs 2–3 run on the kit dipole |
+| F-to-SMA adapter set | exgoofit `B07D28P28J`, 6 pcs — 2× **F female → SMA male** (the one needed), 2× F male → SMA, 2× F female → SMA female. SMA, not RP-SMA | ~$8 | **Ordered** — unblocks Phase 5 labs 1 and 4 on arrival |
 | 20 dB attenuator pad | The SDR overloads where the tuner does not; 10 dB may not be enough | ~$6 | **Consider** — add to the adapter order |
 
-Total spent: **$151.40.**
+Total spent: **~$159.**
+
+Connector note for later: the F↔SMA set is the boundary between the 75 Ω
+world where affordable RF hardware lives (LNBs, dishes, splitters, the
+`FAM` pads) and the 50 Ω world the SDR lives in. The 75/50 mismatch costs
+0.18 dB — a resistive minimum-loss match would cost ~5.7 dB, so on receive
+the plain adapter is the correct answer, not a compromise. Beware
+**RP-SMA**: it threads on perfectly and carries no signal.
 
 No separate coax purchase — the FLATenna ships with 12 ft of RG6, enough
 if the chosen window is within that of the office switch.
