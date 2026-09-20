@@ -19,12 +19,15 @@ on VHF because of a noise floor 6 dB worse than the rest of the house.
 
 **Blocking step.** Get the panel to the workout room while the tuner stays
 wired to the eero in the hallway. Plan: the house has a coax wall jack in
-each room, wiring unknown. Find the splitter where the runs terminate,
-confirm which run feeds the cable modem (never put the antenna on that),
-take the workout-room and hallway runs off the splitter and join them with
-an F-81 barrel (~$3, not yet bought; plus a short RG6 jumper for
-tuner-to-wall). Then Phase 2 again with the panel on the workout-room
-jack: pass = `seq=100` on RF 8, 11, 20, 23, 35.
+each room, wiring unknown. *Confirmed 2026-09-20: internet comes in on
+fiber (a thin fiber drop into the modem/ONT, not coax — the connector is
+the small squarish fiber type, not a screw-on F-connector), and no device
+anywhere in the house uses a coax jack for cable TV. The in-wall coax
+network is dead/legacy — there is no live leg to identify or avoid.* Find
+the splitter where the runs terminate, take the workout-room and hallway
+runs off it and join them with an F-81 barrel (~$3, not yet bought; plus
+a short RG6 jumper for tuner-to-wall). Then Phase 2 again with the panel
+on the workout-room jack: pass = `seq=100` on RF 8, 11, 20, 23, 35.
 
 **Fallback if the jacks aren't usable:** 50 ft RG6 + barrel from the
 workout room to the hallway tuner (~3 dB), or the tuner in the workout
