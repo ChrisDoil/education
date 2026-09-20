@@ -1,9 +1,49 @@
 # OTA TV bring-up procedure
 
-Step-by-step for the hardware ordered 2026-09-13, arriving Thursday.
-Design rationale lives in `README.md` **Goal 5**; the parts table and the
-reasoning behind each choice live in `current_hardware.md`. This file is
-just the procedure, and the place to paste results as they come in.
+Step-by-step for the hardware ordered 2026-09-13 (all arrived 2026-09-19,
+adapter set included). Design rationale lives in `README.md` **Goal 5**;
+the parts table and the reasoning behind each choice live in
+`current_hardware.md`. This file is the procedure, and the place to paste
+results as they come in.
+
+## Status — resume here (as of 2026-09-20)
+
+**Where it stands.** Tuner is on the network (Phase 1 done, `192.168.5.56`,
+reserved). Antenna window is decided (Phase 0 done): **workout room,
+north window** — the only one of four surveyed that hears both transmitter
+clusters, and the best KHON by 5 dB. Attenuator is ruled out for the TV
+chain (Phase 3 done). Phase 2 is **in progress**: the panel was surveyed
+at the hallway window in four orientations and that window fails on
+cluster B (ABC and the other Honolulu stations) in every orientation, and
+on VHF because of a noise floor 6 dB worse than the rest of the house.
+
+**Blocking step.** Get the panel to the workout room while the tuner stays
+wired to the eero in the hallway. Plan: the house has a coax wall jack in
+each room, wiring unknown. Find the splitter where the runs terminate,
+confirm which run feeds the cable modem (never put the antenna on that),
+take the workout-room and hallway runs off the splitter and join them with
+an F-81 barrel (~$3, not yet bought; plus a short RG6 jumper for
+tuner-to-wall). Then Phase 2 again with the panel on the workout-room
+jack: pass = `seq=100` on RF 8, 11, 20, 23, 35.
+
+**Fallback if the jacks aren't usable:** 50 ft RG6 + barrel from the
+workout room to the hallway tuner (~3 dB), or the tuner in the workout
+room on a 5 GHz Wi-Fi extender's Ethernet port (bridge for the tuner only).
+
+**Tools.** `ota-survey.sh` (tuner-side survey, picks a free tuner; run from
+any machine on the LAN: `HDHR=192.168.5.56 SETTLE=4 ./ota-survey.sh`),
+`ota-window.sh` (SDR-side window survey, rtl_power; KHON/KITV/KGMB),
+`setup-sdr-windows.ps1` + `setup-sdr-wsl.sh` (new machine). Survey files
+`ota-survey-*.txt`, `long_whips_*`, `short_whips_*` are the raw results
+summarised in the Results log at the bottom. Tuner 0 is often held by the
+HDHomeRun app on the desktop PC; the survey script uses tuner 1 then.
+
+**Learned the hard way.** The cable modem sits upstream of the eero — a
+device plugged into it is invisible to the LAN. `http://192.168.4.1` is
+an eero; there is no web UI, use the app. WSL2 needs usbipd-win for the
+dongle. `sdrpp` is not in Ubuntu 26.04 apt (Kali only); `rtl-sdr` is all
+`ota-window.sh` needs. A survey where every channel reports identical
+numbers is a tuner locked by a client, not a result.
 
 ## What was ordered
 
@@ -333,6 +373,38 @@ is fixed per band across all windows: **29.7 dB for the KHON sweep,
 | 2 — same, dipole at the glass | short, 29.7 | *(21.1)* | *(3.1)* | 44.7 | **22.2** | -44.6 / -45.9 |
 | 3 — workout room, **north** window, laptop | short, 29.7 | *(27.5)* | *(**8.9**)* ‼ | 40.7 | **22.5** | **-44.4** / -46.2 |
 | 3 — workout room, **east** window | short, 29.7 | *(27.6)* | *(**10.1**)* ‼ | 34.7 | 13.5 | **-45.1** / -46.2 |
+| 3 — workout room, **north** window | **long, 29.7** | 29.9 | **11.4** ★ | *(43.9)* | *(18.6)* | -37.0 / -46.0 |
+| 3 — workout room, **north** window | short, 20.7 | *(15.2)* | *(2.0)* | 33.1 | 12.5 | -46.1 / -46.3 — KITV RF 20: 0.6 (dongle floor) |
+| 3 — workout room, **north** window | **short, 29.7** | *(28.2)* | *(10.2)* | 39.8 | 15.3 | -44.5 / -45.3 — **KITV RF 20: 13.6** ★ |
+| 3 — workout room, **east** window | long, 29.7 | 9.4 | 5.3 | *(33.1)* | *(18.7)* | -37.9 / -46.2 |
+
+★ **Best KHON reading of the survey.** Long whips at the north window:
+data-noise 11.4 (office 6.1, hallway 4.4), pilot at −7.1 absolute — 14 dB
+hotter than either other window — and data 5.5 dB stronger. The east
+window a few feet away is 6 dB worse on KHON; VHF indoors is that
+position-sensitive. Correction to the short-whip note above: on the long
+whips the RF 7 reference reads −37 in the office, north and east alike,
+so that is the house-wide VHF floor and the short whips were simply not
+hearing it; the **hallway at −31 is the anomaly**, and the workout room's
+KHON advantage is mostly signal, not quiet. Still unmeasured here: KITV
+(cluster B). First KITV reading, north at 20.7: **0.6 dB — absent.**
+Caveat: the UHF noise column here is −46 at 20.7 *and* at 29.7, i.e. the
+dongle's own floor, not external noise — this room is quiet enough that
+the 20.7 rule (set for the hallway's busy band) leaves the dongle deaf.
+Re-tested at 29.7: **KITV 13.6 dB, within 1.7 dB of KGMB** — the two
+clusters arrive nearly equal here, where the hallway had cluster B 15–30
+dB down in every orientation. The 20.7 rule is a hallway artefact; in a
+quiet room use 29.7 for both bands.
+
+**Phase 0 verdict: workout room, north window.** KHON 11.4 (long whips),
+KITV 13.6, KGMB 15.3–22.5 — all three at or near the 8VSB threshold on a
+rig that is worse than the Flex Duo + FLATenna on every axis. The only
+window that sees both clusters. East not needed (6 dB worse on KHON).
+Transport: house coax — a jack in the workout room and one in the
+hallway, wiring unknown. Plan: find the splitter, confirm which run is
+the modem's, take the two runs off the splitter and join them with an
+F-81 barrel, then Phase 2 with the panel on the workout-room jack and
+the tuner on the hallway jack.
 
 ‼ **Windows 3 (2026-09-20).** KHON at 9–10 dB *on the short whips*, which
 read −0.3 in the office and 2–3 in the hallway — the same deaf antenna.
@@ -393,28 +465,33 @@ which is a worse front end and a smaller antenna than the Flex Duo +
 FLATenna will be; a baseline for comparing windows, not a verdict on the
 station. Spurs at ~180.05 and ~181.2 MHz, ignored.
 
-- [ ] Phase 0 — candidate windows surveyed with SDR + kit dipole, winner chosen
+- [x] Phase 0 — four windows surveyed (office, hallway, workout N, workout
+      E). **Winner: workout room, north window** — the only one that hears
+      both clusters, and the best KHON by 5 dB. 2026-09-20.
 - [x] Phase 1 — `discover.json` reachable (2026-09-20): `HDFX-2US`,
       DeviceID `10990608`, firmware 20260326, **192.168.5.56** on the eero
       LAN port. First attempt was on the cable modem upstream of the eero
       and was invisible to the whole network. DHCP reservation set in
       the eero app — done, 192.168.5.56 reserved.
-- [~] Phase 2 — **baseline captured** (2026-09-20,
-      `ota-survey-2026-09-20-hallway-temp.txt`): antenna loosely placed at
-      the hallway window, no pad, SETTLE=2. **Locks (seq=100):** RF 11 PBS,
-      18, 19, 23 CBS, 26, 32, 35 NBC — every one a Palehua station. **No
-      lock:** all three Honolulu/cluster B stations (20 ABC, 31, 33 at
-      ss 61–67 — ~15 dB below the passes), the weaker UHF (15, 27, 29,
-      36), RF 22 as expected, and **KHON RF 8 at ss=80 / snq=0** — power
-      in the channel without a lockable signal, i.e. the VHF noise floor
-      the dipole flagged here, with the modem/eero gear next to the
-      antenna. Orientation NOT settled: as placed, the panel sees cluster
-      A only. Next: mount flat on the glass at the far end of the coax
-      from the router gear, SETTLE=4, then rotate for RF 20 + RF 23
-      together.
+- [~] Phase 2 — **hallway window surveyed and rejected** (2026-09-20).
+      Four orientations, files `ota-survey-2026-09-20-hallway-*.txt`:
+      loose placement, flat on the glass far from the modem, edge-on at
+      285° (pos 1), on the side wall at 305° (pos 2). Palehua majors
+      (CBS 23, NBC 35) are position-proof at ss 83–88 / seq 100. Cluster
+      B never locks: KITV 20 best was ss 69 at pos 2, and the lock
+      threshold here is ~75–78 — the house is between this window and
+      Honolulu, and rotation only moved it ~10 dB. VHF-Hi: KHON 8 never
+      locks at ss 77–82 (power without a signal = noise/multipath), KHET
+      11 flips between seq 100 and 0 with small moves. Both consistent
+      with the hallway's 6 dB worse VHF floor from Phase 0. First
+      "mounted" run showed 16 identical PASS rows — tuner 0 was streaming
+      KGMB to the desktop's HDHomeRun app; `ota-survey.sh` now detects
+      that. **Next:** panel to the workout-room north window via the house
+      coax (see Status at top), then re-survey.
 - [x] Phase 3 — **decided by the baseline: no attenuator.** RF 11 pins
       ss=100 with seq=100 (no overload); every failure is on the weak
       side. FAM-10 stays out of the TV chain; it is for the SDR in Phase 5.
 - [ ] Phase 4 — concurrent two-cluster playback confirmed
 - [ ] Phase 5 — labs 2 and 3 (kit dipole)
-- [ ] Phase 5 — labs 1 and 4 (adapter ordered; do on arrival)
+- [ ] Phase 5 — labs 1 and 4 (adapter set in hand; needs the panel
+      settled first)
