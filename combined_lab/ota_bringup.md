@@ -27,6 +27,11 @@ unblock when it lands. See Phase 5.
 - `hdhomerun-config` on the WSL box: `sudo apt install hdhomerun-config`
 - The HDHomeRun app installed on the Samsung TV (Tizen store) and laptop
 
+> **Setting up a second machine** (e.g. the laptop for surveying other
+> windows): `setup-sdr-windows.ps1` in an admin PowerShell, then
+> `setup-sdr-wsl.sh` inside WSL. Together they do everything the two
+> caveats below describe.
+>
 > **WSL2 USB caveat (for every SDR step — Phase 0 and Phase 5).** WSL2
 > has no USB stack; the dongle is forwarded from Windows with usbipd-win.
 > Once, in an admin PowerShell: `winget install usbipd`, then
