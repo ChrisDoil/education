@@ -1,0 +1,7 @@
+gain 29.7 dB; levels are rtl_power dB, uncalibrated — compare windows, not absolutes
+
+station                        noise   pilot    data   pilot-noise data-noise
+KHON RF 8  (pilot 180.31)      -44.6   -23.4   -41.5          21.1        3.1
+KGMB RF 23 (pilot 524.31)      -45.9    -1.3   -23.8          44.7       22.2
+
+csv kept in /tmp/tmp.TCUZLXr0Iw
