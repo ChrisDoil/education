@@ -81,7 +81,11 @@ Shortlist windows that can face that way, and prefer ones with:
 - glass rather than drywall in the path
 - nothing metallic behind the panel — foil-backed insulation, metal
   blinds, a monitor, a fridge
-- ≤12 ft of cable run to the switch (that is all the coax you have)
+- ≤12 ft of cable run to an Ethernet port (that is all the coax you
+  have). *Updated 2026-09-20:* the cable router lives at the **hallway**
+  window, so the tuner can plug straight into it there; the office would
+  need a Wi-Fi repeater, which is the wrong transport for two ~19 Mbps
+  constant-rate streams.
 
 ### Survey the candidate windows *now*, with the SDR
 
@@ -132,9 +136,20 @@ is the whole reason the panel has to straddle two directions.
 Deliberately do this with **no antenna connected.** Network faults and RF
 faults should never be debugged at the same time.
 
-1. Flex Duo → office switch, then power.
-2. Find its address in the router's DHCP table (look for a SiliconDust
-   MAC), then confirm from WSL:
+1. Flex Duo → a LAN port on the **eero** (or a switch hanging off one),
+   then power. **Not the cable modem** — the modem is upstream of the eero,
+   and a device plugged into it is outside the 192.168.4.0/22 network
+   entirely (learned the hard way, 2026-09-20). The eero gateway has one
+   LAN port; a 5-port unmanaged switch on it is the standard answer. Keep
+   the tuner, eero, modem and their power bricks at the far end of the
+   coax from the antenna — they are VHF noise sources (see the window 2
+   noise-floor question in the Results log).
+2. Find its address in the **eero app → Devices** (there is no router web
+   page; `http://192.168.4.1` redirects to eero's block page). Look for
+   "HDHomeRun" or a `00:18:DD` MAC. Or sweep from WSL:
+   `for i in $(seq 1 254); do curl -s -m1 http://192.168.4.$i/discover.json
+   | grep -q DeviceID && echo 192.168.4.$i; done` (the network is a /22,
+   so .5, .6, .7 are possible too). Then confirm:
 
    ```bash
    curl -s http://<tuner-ip>/discover.json | python3 -m json.tool
@@ -142,8 +157,9 @@ faults should never be debugged at the same time.
 
    Expect `ModelNumber: HDFX-2US`, `TunerCount: 2`, a `DeviceID`, and a
    firmware version.
-3. **Set a DHCP reservation** for that MAC. The Tizen app and the survey
-   script both get easier with a stable address.
+3. **Set a DHCP reservation** for that MAC — eero app → the device →
+   *Reservations & Port Forwarding*. The Tizen app and the survey script
+   both get easier with a stable address.
 4. Note the `DeviceID` — `ota-survey.sh` accepts either it or the IP.
 
 **Pass criterion:** `discover.json` returns valid JSON over the LAN. No
@@ -312,6 +328,24 @@ is fixed per band across all windows: **29.7 dB for the KHON sweep,
 | 1 — office, faces 310° mag | long, 29.7 | 15.9 dB | **6.1 dB** | *(29.0)* | *(11.2)* | -37.1 / -36.5 |
 | 1 — office, faces 310° mag | short, 29.7 | *(2.0)* | *(-0.3)* | 35.4 | 15.7 | -41.4 / -31.4 |
 | 1 — office, faces 310° mag | **short, 20.7** | *(1.0)* | *(-0.1)* | 34.8 | **15.2** | -45.4 / -39.4 |
+| 2 — hallway, faces 215° mag, laptop | long, 29.7 | 9.8 | **4.4** ⚠ | *(37.6)* | *(19.5)* | **-31.2** / -46.1 |
+| 2 — same, dipole ~1 m off the glass | short, 29.7 | *(20.0)* | *(2.3)* | 24.5 | 8.8 | -43.8 / -46.1 |
+| 2 — same, dipole at the glass | short, 29.7 | *(21.1)* | *(3.1)* | 44.7 | **22.2** | -44.6 / -45.9 |
+| 3 — workout room, **north** window, laptop | short, 29.7 | *(27.5)* | *(**8.9**)* ‼ | 40.7 | **22.5** | **-44.4** / -46.2 |
+| 3 — workout room, **east** window | short, 29.7 | *(27.6)* | *(**10.1**)* ‼ | 34.7 | 13.5 | **-45.1** / -46.2 |
+
+‼ **Windows 3 (2026-09-20).** KHON at 9–10 dB *on the short whips*, which
+read −0.3 in the office and 2–3 in the hallway — the same deaf antenna.
+Two causes visible in the raw columns: KHON's pilot is 4–6 dB hotter here
+in absolute terms than the resonant long whips got anywhere else, and the
+**VHF noise floor is −44/−45, i.e. 7–13 dB below the office and hallway.**
+This room does not have the VHF noise problem the hallway could not
+rotate away from (see Phase 2). North matches the hallway's best on KGMB.
+East faces Honolulu — cluster B, which the hallway cannot see through the
+house. Pending: long-whip KHON and short-whip KITV/KGMB at 20.7 at both
+windows (`ota-window.sh` now reports KITV RF 20 as the cluster B probe).
+Also pending: how the tuner reaches the LAN from that room (eero satellite
+port, or ~50 ft RG6 back to the hallway tuner, ~3 dB).
 
 *Italics = wrong pair for that band, kept only to show why the protocol
 is two sweeps.*
@@ -328,6 +362,28 @@ SNR on UHF, and 20.7 gives 9 dB of headroom for a better window.
 **Decision: UHF sweeps at 20.7 for every window.** VHF stays at 29.7 —
 untested, and KHON is weak enough that dongle noise may matter there.
 
+**Window 2 (2026-09-20, laptop + same dongle).** UHF: **+7 dB over the
+office** (22.2 vs 15.2), and the two short-whip runs show 13 dB of
+difference from dipole position alone — at the glass is the number that
+matters, since that is where the panel goes. Short whips were run at
+29.7 not 20.7; ranking is unaffected (UHF shown linear at 29.7), pilot at
+-1.3 is as hot as it should get. KHON: reads worse (4.4 vs 6.1) but the
+*signal* is ~3.4 dB **stronger** than at the office (data -26.8 vs
+-31.0, noise-corrected); the SNR loss is entirely a **VHF noise floor
+6 dB higher** (-31.2 vs -37.1). ⚠ Pending control: laptop at the office
+window, long whips, on battery. Office floor reads ~-37 on the laptop →
+the noise belongs to window 2 and the Flex Duo would see it too → office
+keeps KHON. Reads ~-31 → the noise is the laptop (USB / charger) and the
+tuner never sees it → **window 2 wins both bands.** Third candidate:
+the **cable modem / router / power bricks are at this window**, and that
+noise *would* reach the Flex Duo. If the laptop proves clean, sweep the
+hallway with the dipole near vs far from the router (or with the router
+powered off for one sweep) — if the floor follows the router, the fix is
+placement: antenna at the far end of the coax from it. Network tilts the
+decision toward the hallway regardless: the tuner plugs straight into
+the router there, versus a Wi-Fi repeater for the office. Raw outputs:
+`long_whips_1`, `short_whips_1`, `short_whips_2`.
+
 Notes, window 1: textbook 8VSB signature in SDR++ — quiet floor below
 180.3, pilot spike at 180.30 with no PPM correction, flat raised data
 floor above it. SDR++ eyeball gave ~7 dB KHON data-noise, agreeing with
@@ -338,9 +394,27 @@ FLATenna will be; a baseline for comparing windows, not a verdict on the
 station. Spurs at ~180.05 and ~181.2 MHz, ignored.
 
 - [ ] Phase 0 — candidate windows surveyed with SDR + kit dipole, winner chosen
-- [ ] Phase 1 — `discover.json` reachable, DHCP reservation set
-- [ ] Phase 2 — baseline survey captured, orientation settled
-- [ ] Phase 3 — attenuator decision made and justified by the diff
+- [x] Phase 1 — `discover.json` reachable (2026-09-20): `HDFX-2US`,
+      DeviceID `10990608`, firmware 20260326, **192.168.5.56** on the eero
+      LAN port. First attempt was on the cable modem upstream of the eero
+      and was invisible to the whole network. DHCP reservation set in
+      the eero app — done, 192.168.5.56 reserved.
+- [~] Phase 2 — **baseline captured** (2026-09-20,
+      `ota-survey-2026-09-20-hallway-temp.txt`): antenna loosely placed at
+      the hallway window, no pad, SETTLE=2. **Locks (seq=100):** RF 11 PBS,
+      18, 19, 23 CBS, 26, 32, 35 NBC — every one a Palehua station. **No
+      lock:** all three Honolulu/cluster B stations (20 ABC, 31, 33 at
+      ss 61–67 — ~15 dB below the passes), the weaker UHF (15, 27, 29,
+      36), RF 22 as expected, and **KHON RF 8 at ss=80 / snq=0** — power
+      in the channel without a lockable signal, i.e. the VHF noise floor
+      the dipole flagged here, with the modem/eero gear next to the
+      antenna. Orientation NOT settled: as placed, the panel sees cluster
+      A only. Next: mount flat on the glass at the far end of the coax
+      from the router gear, SETTLE=4, then rotate for RF 20 + RF 23
+      together.
+- [x] Phase 3 — **decided by the baseline: no attenuator.** RF 11 pins
+      ss=100 with seq=100 (no overload); every failure is on the weak
+      side. FAM-10 stays out of the TV chain; it is for the SDR in Phase 5.
 - [ ] Phase 4 — concurrent two-cluster playback confirmed
 - [ ] Phase 5 — labs 2 and 3 (kit dipole)
 - [ ] Phase 5 — labs 1 and 4 (adapter ordered; do on arrival)

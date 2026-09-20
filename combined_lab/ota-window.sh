@@ -10,8 +10,12 @@
 # eyeball against SDR++.
 #
 # Reference (empty) channels come from the RabbitEars survey: RF 7
-# (174-180) below KHON, RF 24 (530-536) above KGMB. RF 22 below KGMB is
-# KHII (ATSC 3.0) and is NOT quiet, so the UHF noise reference sits above.
+# (174-180) below KHON, RF 21 (512-518) above KITV, RF 24 (530-536) above
+# KGMB. RF 22 below KGMB is KHII (ATSC 3.0) and is NOT quiet, so the UHF
+# noise references sit above their channels.
+#
+# KITV (ABC) is the cluster B probe — Honolulu, 91 deg — added 2026-09-20
+# after the hallway survey showed cluster B ~15-30 dB down at that window.
 #
 # Usage:  ./ota-window.sh                # stop SDR++ first: one owner per dongle
 #         GAIN=28 INT=20 ./ota-window.sh
@@ -40,7 +44,7 @@ if [ -z "$CSV_DIR" ]; then
   }
   sweep "VHF-Hi (KHON)" 174M:187M:10k vhf.csv
   sleep 1   # librtlsdr can refuse an immediate reopen after close
-  sweep "UHF (KGMB)"    512M:537M:10k uhf.csv
+  sweep "UHF (KITV, KGMB)" 500M:537M:10k uhf.csv
 fi
 
 python3 - "$CSV_DIR" "$GAIN" <<'PY'
@@ -72,6 +76,7 @@ def stat(bins, lo, hi, fn):
 stations = [
   # name,   csv,       noise ref (MHz),  pilot window,       data span
   ("KHON RF 8  (pilot 180.31)", "vhf.csv", (175.0, 179.8), (180.25, 180.37), (181.0, 185.0)),
+  ("KITV RF 20 (pilot 506.31)", "uhf.csv", (513.0, 517.5), (506.25, 506.37), (507.0, 511.0)),
   ("KGMB RF 23 (pilot 524.31)", "uhf.csv", (531.0, 535.5), (524.25, 524.37), (525.0, 529.0)),
 ]
 M = 1e6

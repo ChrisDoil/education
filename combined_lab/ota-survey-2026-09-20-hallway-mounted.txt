@@ -1,0 +1,21 @@
+RF   STATION                        LOCK     ss  snq  seq  VERDICT
+---- ------------------------------ ------ ---- ---- ----  -------
+8    KHON  FOX/CW   VHF-Hi *        none     82    0    0  NO LOCK
+11   KHET  PBS      VHF-Hi          8vsb     98   57    0  MARGINAL
+15   KUPU  IND                      none     62    0    0  NO LOCK
+18   KALO  REL                      8vsb     82   76  100  PASS
+19   KIKU  IND                      8vsb     87   86  100  PASS
+20   KITV  ABC      cluster B       none     52    0    0  NO LOCK
+22   KHII  ATSC 3.0 expect NO lock  none     82    0    0  NO LOCK
+23   KGMB  CBS                      8vsb     88   91  100  PASS
+26   KWBN  Daystar                  8vsb     76   65  100  PASS
+27   KAAH  TBN                      none     57    0    0  NO LOCK
+29   KKAI  IND                      none     52    0    0  NO LOCK
+31   KWHE  IND      cluster B       8vsb     69   47    0  MARGINAL
+32   KPXO  ION                      8vsb     82   90  100  PASS
+33   KBFD  Korean   cluster B       none     65    0    0  NO LOCK
+35   KHNL  NBC                      8vsb     83   90  100  PASS
+36   KHHI-LD        LTE-adjacent    none     41    0    0  NO LOCK
+
+* KHON RF 8 is the station with the least margin (+46.6 dB, VHF-Hi,
+  far cluster). If exactly one channel disappoints, expect it to be this one.

@@ -7,8 +7,8 @@
 #   VHF-Hi (7-13): center = 174 + 6*(n-7) + 3   MHz
 #   UHF   (14-36): center = 470 + 6*(n-14) + 3  MHz
 #
-# Usage:  HDHR=192.168.1.50 ./ota-survey.sh
-#         HDHR=1044AE12 TUNER=1 ./ota-survey.sh
+# Usage:  HDHR=192.168.5.56 ./ota-survey.sh          # picks a free tuner
+#         HDHR=10990608 TUNER=1 SETTLE=4 ./ota-survey.sh
 #
 # Reads only; releases the tuner on exit. Safe to re-run while repositioning
 # the antenna — that is the point.
@@ -16,7 +16,7 @@
 set -uo pipefail
 
 HDHR="${HDHR:?set HDHR to the tuner IP address or 8-hex-digit device ID}"
-TUNER="${TUNER:-0}"
+TUNER="${TUNER:-}"      # default: first tuner not locked by a client
 SETTLE="${SETTLE:-2}"   # seconds to let the demod lock before reading
 
 CHANNELS=(
@@ -47,13 +47,30 @@ command -v hdhomerun_config >/dev/null || {
   exit 1
 }
 
+# A tuner streaming to a client (the HDHomeRun app, the TV) refuses `set`,
+# and `get status` then reports the client's channel — a survey run against
+# it is the same reading 16 times. Pick a free tuner, and refuse to run
+# blind if the caller forced a busy one.
+if [ -z "$TUNER" ]; then
+  for t in 0 1; do
+    key=$(hdhomerun_config "$HDHR" get "/tuner$t/lockkey" 2>/dev/null)
+    [ "$key" = none ] && { TUNER=$t; break; }
+  done
+  [ -n "$TUNER" ] || { echo "both tuners are locked by clients — stop the HDHomeRun app / TV and retry" >&2; exit 1; }
+else
+  key=$(hdhomerun_config "$HDHR" get "/tuner$TUNER/lockkey" 2>/dev/null)
+  [ "$key" = none ] || { echo "tuner$TUNER is locked by $key — use another tuner or stop that client" >&2; exit 1; }
+fi
+echo "using tuner$TUNER" >&2
+
 printf '%-4s %-30s %-6s %4s %4s %4s  %s\n' RF STATION LOCK ss snq seq VERDICT
 printf '%-4s %-30s %-6s %4s %4s %4s  %s\n' ---- ------------------------------ ------ ---- ---- ---- -------
 
 for entry in "${CHANNELS[@]}"; do
   IFS=: read -r rf freq name <<<"$entry"
 
-  hdhomerun_config "$HDHR" set "/tuner$TUNER/channel" "8vsb:$freq" >/dev/null 2>&1
+  hdhomerun_config "$HDHR" set "/tuner$TUNER/channel" "8vsb:$freq" >/dev/null 2>&1 \
+    || { echo "tuner$TUNER refused set on RF $rf (client grabbed it mid-run?) — aborting" >&2; exit 1; }
   sleep "$SETTLE"
   status=$(hdhomerun_config "$HDHR" get "/tuner$TUNER/status" 2>/dev/null)
 
