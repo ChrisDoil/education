@@ -3,7 +3,11 @@
 # another machine (built against Kali rolling 2026.2; any Debian-family
 # distro with these packages in apt should work).
 #
-# Installs:  sdrpp            SDR++ receiver GUI (draws via WSLg)
+# Installs:  sdrpp            SDR++ receiver GUI (draws via WSLg). Kali/Debian
+#                             testing only — NOT in Ubuntu 26.04 (arrives in
+#                             26.10). On Ubuntu it is skipped; ota-window.sh
+#                             needs only rtl-sdr, and `gqrx-sdr` is the apt
+#                             GUI alternative there.
 #            rtl-sdr          rtl_test / rtl_power, librtlsdr, udev rules
 #            hdhomerun-config Flex Duo control, for ota-survey.sh (Phases 1-3)
 # Then blacklists the kernel DVB driver so it can't claim the dongle, adds
@@ -26,7 +30,7 @@ for pkg in sdrpp rtl-sdr hdhomerun-config; do
     sudo apt install -y "$pkg"
   else
     echo "!! $pkg is not in this distro's apt; install it another way" >&2
-    [ "$pkg" = sdrpp ] && echo "   SDR++ .deb builds: https://github.com/AlexandreRouma/SDRPlusPlus/releases" >&2
+    [ "$pkg" = sdrpp ] && echo "   (expected on Ubuntu 26.04 — not needed for ota-window.sh; 'apt install gqrx-sdr' if you want a GUI)" >&2
   fi
 done
 
